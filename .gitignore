@@ -1,0 +1,36 @@
+# build intermediates / scratch
+build/
+spool/
+*.log
+_elev_*
+*.cer
+*.cat
+
+# the dev "journey" debug scripts (kept under docs/dev-journey/ if you want them)
+setup-stage*.ps1
+setup-port-printer*.ps1
+setup-admin-bridge.ps1
+remove-admin-bridge.ps1
+
+# Visual Studio / editor junk from upstream
+*.aps
+*.user
+*.suo
+*.sln.DotSettings.user
+.vs/
+
+# the upstream clone's nested git + the bundled x86 OpenSSL we stubbed out (not needed)
+src/.git/
+src/openssl/
+
+# the user's live bridge config (ship only config.example.json) + dev scratch
+bridge/config.json
+bridge/backend/_*.sh
+bridge/backend/_*.out
+*-preview*.png
+
+# the built clickable installer — shipped as a GitHub Release asset, not committed to git
+dist/
+
+# dev "journey" debug scripts (kept locally for reference; not part of the release)
+docs/dev-journey/

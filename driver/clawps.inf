@@ -1,0 +1,30 @@
+; clawps.inf - generic v3 PostScript printer driver for the clawmon WSL pipeline.
+; Uses Windows' inbox (signed) PScript5 core + the inbox generic MSXPSINC.PPD,
+; so it carries no third-party binaries. v3 drivers bind to clawmon ports
+; (v4 package drivers like "Microsoft Print To PDF" refuse third-party ports).
+[Version]
+Signature="$Windows NT$"
+Class=Printer
+ClassGUID={4D36E979-E325-11CE-BFC1-08002BE10318}
+Provider=%Mfg%
+DriverVer=06/16/2026,1.0.0.0
+CatalogFile=clawps.cat
+
+[Manufacturer]
+%Mfg%=ClawModels,NTARM64
+
+[ClawModels.NTARM64]
+%Model%=InstallPS
+
+[InstallPS]
+Include=ntprint.inf
+Needs=PSCRIPT.OEM,XPSPPD.OEM
+DataSection=PSCRIPT_DATA
+DataFile=MSXPSINC.PPD
+
+[DestinationDirs]
+DefaultDestDir=66000
+
+[Strings]
+Mfg="Clawmon"
+Model="Clawmon PostScript (WSL 1200)"
