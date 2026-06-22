@@ -63,7 +63,7 @@ We originally wanted clawmon to *be* the whole solution ("print → pipe to `wsl
 
 ## Requirements
 - Windows 11 on ARM64.
-- For the **bridge**: a **WSL** Ubuntu distro (the installer can create it) + an **AirPrint / IPP‑Everywhere** printer on your LAN.
+- For the **bridge**: a **WSL** Ubuntu distro (the installer can create it) + an **AirPrint / IPP‑Everywhere** printer on your LAN. **Works with any such printer — Brother or other; you point it at the printer's IP at install, and nothing is model‑specific.**
 - To **build clawmon**: a WSL distro + [llvm‑mingw](https://github.com/mstorsjo/llvm-mingw). Prebuilt ARM64 binaries are in [`bin/`](bin/).
 
 ## License & credits

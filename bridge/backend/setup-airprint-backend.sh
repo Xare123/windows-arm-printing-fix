@@ -21,8 +21,13 @@ ARG="$1"
 URI=""
 case "$ARG" in
   ipp://*|ipps://*) URI="$ARG" ;;
-  "") echo "  no printer given - auto-discovering via ippfind..."
-      URI="$(ippfind --timeout 6 2>/dev/null | grep -E '^ipps?://' | head -1)" ;;
+  "") echo "  no printer given - trying to auto-discover via ippfind (mDNS; may not work in WSL)..."
+      ALL="$(ippfind --timeout 6 2>/dev/null | grep -E '^ipps?://')"
+      if [ -n "$ALL" ]; then echo "  found:"; echo "$ALL" | sed 's/^/    /'; fi
+      URI="$(printf '%s\n' "$ALL" | head -1)"
+      if [ "$(printf '%s\n' "$ALL" | grep -c .)" -gt 1 ]; then
+        echo "  (multiple printers found - using the FIRST; re-run with an IP to choose a specific one)"
+      fi ;;
   *)  URI="ipp://$ARG/ipp/print" ;;
 esac
 if [ -z "$URI" ]; then

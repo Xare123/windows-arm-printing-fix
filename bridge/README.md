@@ -18,10 +18,10 @@ No service, no watcher, no tray icon. The only always‑on components are the Wi
 ## Install — clickable
 
 Run **`FullQualityPrintBridge-Setup.exe`** (from the GitHub Release) and follow the wizard. It:
-1. creates a WSL Ubuntu distro with CUPS (first run downloads ~250 MB),
-2. **auto‑discovers your AirPrint printer** (or you can pass its IP),
+1. **asks which printer to use** — enter its **IP address** (any AirPrint/IPP printer works; leave blank to try auto‑detect),
+2. creates a WSL Ubuntu distro with CUPS (first run downloads ~250 MB),
 3. enables **WSL2 mirrored networking** (so large pages don't stall),
-4. adds the **"Full Quality (1200)"** printer + the print‑event task.
+4. adds the **"Full Quality (1200)"** printer + the print‑event task, pointed at your printer.
 
 Then print to **"Full Quality (1200)"** from any app and pick a quality on the popup.
 
@@ -36,6 +36,20 @@ pwsh -ExecutionPolicy Bypass -File .\install-bridge.ps1
 ```
 
 `setup-all.ps1` runs all of the above in one shot (it's what the installer calls); it also sets WSL2 mirrored networking.
+
+## Which printer it targets — and changing it later
+
+Targeting is set **once at install**: the WSL CUPS queue (`FullQuality`) is created with
+`device-uri = ipp://<your-printer-IP>/ipp/print`. Every job goes to that queue, so it always
+hits that one printer. The `armprint` helper just runs `lp -d FullQuality` — the queue's URI is what aims it.
+
+- **You give the printer's IP at install** (the wizard asks; the manual command takes it as an argument). mDNS auto‑detect is *attempted* when you leave it blank, but it's unreliable inside WSL2 — **entering the IP is recommended.**
+- **Any AirPrint / IPP‑Everywhere printer works** — Brother or otherwise. Nothing here is model‑specific (generic `everywhere` driver + standard PWG options).
+- **Multiple printers?** Pass the specific IP; auto‑detect otherwise just grabs the first it sees.
+- **Switch printers later (no reinstall)** — repoint the queue inside WSL:
+  ```bash
+  wsl -d Ubuntu-2404 -u root -- lpadmin -p FullQuality -E -v ipp://NEW.PRINTER.IP/ipp/print
+  ```
 
 ## Quality
 

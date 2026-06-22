@@ -34,7 +34,7 @@ WelcomeLabel2=This will add a normal "Full Quality (1200)" printer to Windows an
 [Run]
 ; one elevated post-install step does everything: WSL backend + the Windows printer/event-task
 Filename: "powershell.exe"; \
-  Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\setup-all.ps1"" -InstallDir ""{app}"""; \
+  Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\setup-all.ps1"" -InstallDir ""{app}"" -PrinterIp ""{code:GetPrinterIp}"""; \
   StatusMsg: "Setting up the printer and the full‑quality renderer (first run downloads ~250 MB and can take several minutes)..."; \
   Flags: waituntilterminated
 
@@ -43,3 +43,24 @@ Filename: "powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -Fil
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}"
+
+[Code]
+{ Wizard page that asks which printer to target. The IP becomes the CUPS queue's
+  device-uri (ipp://IP/ipp/print) at install time. Blank = try auto-detect. }
+var
+  PrinterPage: TInputQueryWizardPage;
+
+procedure InitializeWizard;
+begin
+  PrinterPage := CreateInputQueryPage(wpWelcome,
+    'Choose your printer',
+    'Which printer should print at full quality?',
+    'Enter your printer''s IP address (recommended). You can find it on the printer''s screen under Settings > Network > WLAN Status, or in your router''s device list. Any AirPrint / IPP-capable printer works.' + #13#10#13#10 +
+    'Leave blank to try auto-detecting an AirPrint printer on your network (may not work on all setups).');
+  PrinterPage.Add('Printer IP address:', False);
+end;
+
+function GetPrinterIp(Param: String): String;
+begin
+  Result := Trim(PrinterPage.Values[0]);
+end;
