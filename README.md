@@ -35,7 +35,7 @@ App → "Full Quality (1200)" printer        (inbox Microsoft Print To PDF — a
     → CUPS renders (poppler → URF) and prints at full quality
 ```
 
-- **One printer, pick quality per job** (popup; auto‑Best after a few seconds).
+- **One printer; pick quality + sides per job** (popup: Draft/Normal/Best and Double/Single‑sided; defaults to Best + Double‑sided, auto‑confirms after a few seconds).
 - **Nothing runs in the background** — only the spooler + Task Scheduler, as for any printer. WSL wakes for the one job and idles out.
 - **Best color**, because CUPS/poppler does the rasterization, not Windows.
 

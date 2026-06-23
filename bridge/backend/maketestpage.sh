@@ -1,9 +1,12 @@
 #!/bin/sh
-# Generate the dedicated test page used for ALL print tests (never use real docs).
+# Generate the dedicated 2-page test page used for ALL print tests (never use real docs).
+# Page 1 = full quality/color/margin test.  Page 2 = duplex back-side check.
 cat > /tmp/testpage.ps <<'EOF'
 %!PS-Adobe-3.0
 %%BoundingBox: 0 0 612 792
+%%Pages: 2
 %%EndComments
+%%Page: 1 1
 0 0 0 setrgbcolor
 1.5 setlinewidth
 18 18 576 756 rectstroke
@@ -12,7 +15,7 @@ cat > /tmp/testpage.ps <<'EOF'
   0 -12 moveto 0 12 lineto stroke grestore } def
 33 759 cross  579 759 cross  33 33 cross  579 33 cross
 /Helvetica-Bold findfont 22 scalefont setfont
-40 730 moveto (PRINT BRIDGE  --  TEST PAGE) show
+40 730 moveto (PRINT BRIDGE  --  TEST PAGE  \(side 1\)) show
 /Helvetica findfont 10 scalefont setfont
 40 714 moveto (Full Quality \(1200\) - WSL AirPrint - dedicated test sheet \(do not use real documents\)) show
 40 686 moveto /Helvetica findfont 6 scalefont setfont (6pt   The quick brown fox jumps over the lazy dog  0123456789) show
@@ -48,12 +51,28 @@ gsave 150 360 translate 0.25 setlinewidth
   0 1 50 { /i exch def i 6 mul 0 moveto 0 18 rlineto } for stroke
 grestore
 /Helvetica findfont 9 scalefont setfont
-40 28 moveto (If the outer frame, all four corner marks, and the full gradient print, the page is complete - no truncation.) show
+40 28 moveto (If the outer frame, all four corner marks, and the full gradient print, this side is complete - no truncation.) show
+showpage
+%%Page: 2 2
+0 0 0 setrgbcolor
+1.5 setlinewidth
+18 18 576 756 rectstroke
+/cross2 { gsave translate 0.8 setlinewidth
+  -12 0 moveto 12 0 lineto stroke
+  0 -12 moveto 0 12 lineto stroke grestore } def
+33 759 cross2  579 759 cross2  33 33 cross2  579 33 cross2
+/Helvetica-Bold findfont 30 scalefont setfont
+40 700 moveto (TEST PAGE  --  SIDE 2  \(back\)) show
+/Helvetica findfont 12 scalefont setfont
+40 668 moveto (Duplex check: if this is on the BACK of side 1 \(one sheet\), double-sided works.) show
+40 650 moveto (If this is on a separate second sheet, the job printed single-sided.) show
+1 0 0 setrgbcolor 40 590 150 34 rectfill
+0 0 1 setrgbcolor 210 590 150 34 rectfill
+0 0 0 setrgbcolor /Helvetica findfont 9 scalefont setfont
+40 28 moveto (Side 2 of 2.) show
 showpage
 %%EOF
 EOF
 ps2pdf /tmp/testpage.ps /mnt/c/Claude/clawmon-arm64/bridge/TESTPAGE.pdf 2>&1 | tail -2
-echo "TESTPAGE.pdf: $(wc -c < /mnt/c/Claude/clawmon-arm64/bridge/TESTPAGE.pdf) bytes"
-pdftoppm -png -r 90 /mnt/c/Claude/clawmon-arm64/bridge/TESTPAGE.pdf /mnt/c/Claude/clawmon-arm64/bridge/backend/_testpage_preview 2>/dev/null
-ls /mnt/c/Claude/clawmon-arm64/bridge/backend/_testpage_preview*.png 2>/dev/null
+echo "TESTPAGE.pdf: $(wc -c < /mnt/c/Claude/clawmon-arm64/bridge/TESTPAGE.pdf) bytes, pages=$(pdfinfo /mnt/c/Claude/clawmon-arm64/bridge/TESTPAGE.pdf 2>/dev/null | awk '/Pages/{print $2}')"
 echo MAKETESTPAGE-DONE

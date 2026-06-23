@@ -51,14 +51,15 @@ sleep 1
 echo "== install /usr/local/bin/armprint helper =="
 cat > /usr/local/bin/armprint <<EOS
 #!/bin/sh
-# armprint <quality> <file>  -- print one file via the AirPrint queue at <quality>.
-#   quality = Draft | Normal | High   (cupsPrintQuality; "Best" maps to High)
-q="\${1:-High}"; f="\$2"
+# armprint <quality> <sides> <file>  -- print one file via the AirPrint queue.
+#   quality = Draft | Normal | High             (cupsPrintQuality; "Best" maps to High)
+#   sides   = one-sided | two-sided-long-edge    (Double-sided = two-sided-long-edge)
+q="\${1:-High}"; s="\${2:-two-sided-long-edge}"; f="\$3"
 [ -f "\$f" ] || { echo "armprint: file not found: \$f" >&2; exit 1; }
 # make sure the scheduler is up (cold WSL boot race) before printing
 systemctl is-active --quiet cups 2>/dev/null || systemctl start cups 2>/dev/null || service cups start 2>/dev/null
 i=0; while [ \$i -lt 20 ]; do lpstat -r >/dev/null 2>&1 && break; sleep 0.5; i=\$((i + 1)); done
-exec lp -d $QUEUE -o cupsPrintQuality="\$q" -o ColorModel=RGB -o MediaType=Stationery -o print-scaling=fit "\$f"
+exec lp -d $QUEUE -o cupsPrintQuality="\$q" -o ColorModel=RGB -o MediaType=Stationery -o print-scaling=fit -o sides="\$s" "\$f"
 EOS
 chmod +x /usr/local/bin/armprint
 

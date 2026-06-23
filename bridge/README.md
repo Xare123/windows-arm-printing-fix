@@ -51,7 +51,9 @@ hits that one printer. The `armprint` helper just runs `lp -d FullQuality` — t
   wsl -d Ubuntu-2404 -u root -- lpadmin -p FullQuality -E -v ipp://NEW.PRINTER.IP/ipp/print
   ```
 
-## Quality
+## Quality & sides
+
+When you print, a small popup lets you pick **Quality** (Draft / Normal / **Best**) and **Sides** (**Double‑sided** / Single‑sided) per job. It defaults to **Best + Double‑sided** and auto‑confirms after a few seconds, so the common case is zero clicks. Sides maps to the IPP `sides` attribute (`two-sided-long-edge` / `one-sided`); the printer's auto‑duplex does the rest.
 
 The popup's **Draft / Normal / Best** maps to CUPS `cupsPrintQuality` **Draft / Normal / High**. "Best" engages the printer's full droplet mode — see the [repo root README](../README.md) on why **Best**, not a "1200 dpi" setting, is the real lever (the printer only accepts ≤600‑dpi input on any OS).
 

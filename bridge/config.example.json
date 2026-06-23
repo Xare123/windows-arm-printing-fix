@@ -1,12 +1,12 @@
 {
-  "_comment": "Where the printer drops each job, and the command that prints it. Backend = the WSL CUPS AirPrint queue; the armprint helper takes the per-job quality. {DISTRO}, {QUALITY}, {FILE}, {WSLFILE} are substituted at run time.",
+  "_comment": "Where the printer drops each job, and the command that prints it. Backend = the WSL CUPS AirPrint queue; the armprint helper takes the per-job quality + sides. {DISTRO}, {QUALITY}, {SIDES}, {FILE}, {WSLFILE} are substituted at run time.",
   "installDir": "C:\\ProgramData\\ArmPrintBridge",
   "jobFile":    "C:\\ProgramData\\ArmPrintBridge\\incoming.pdf",
   "workDir":    "C:\\ProgramData\\ArmPrintBridge\\work",
 
   "wslDistro":  "Ubuntu-2404",
   "forwardExe": "wsl.exe",
-  "forwardArgs": ["-d", "{DISTRO}", "-u", "root", "--", "/usr/local/bin/armprint", "{QUALITY}", "{WSLFILE}"],
+  "forwardArgs": ["-d", "{DISTRO}", "-u", "root", "--", "/usr/local/bin/armprint", "{QUALITY}", "{SIDES}", "{WSLFILE}"],
 
   "_examples": {
     "network_cups_or_mac_or_pi": {

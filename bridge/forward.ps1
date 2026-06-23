@@ -24,18 +24,18 @@ Log "claimed $claim ($((Get-Item $claim).Length) bytes)"
 # Ask the user the quality for THIS job (Draft/Normal/Best; auto-Best after a few seconds).
 # Run the picker in a separate STA Windows PowerShell so WinForms is reliable. This never
 # blocks printing: any failure or timeout falls back to High (Best).
-$quality = 'High'
+$quality = 'High'; $sides = 'two-sided-long-edge'
 $picker = Join-Path $cfg.installDir 'QualityPicker.ps1'
 if (Test-Path $picker) {
   try {
     $psexe = Join-Path $env:WINDIR 'System32\WindowsPowerShell\v1.0\powershell.exe'
     if (-not (Test-Path $psexe)) { $psexe = 'powershell.exe' }
     $out  = & $psexe -NoProfile -ExecutionPolicy Bypass -STA -WindowStyle Hidden -File $picker 2>$null
-    $pick = $out | Where-Object { $_ -match '^(Draft|Normal|High)$' } | Select-Object -Last 1
-    if ($pick) { $quality = [string]$pick }
+    $pick = $out | Where-Object { $_ -match '^(Draft|Normal|High)\|(one-sided|two-sided-long-edge|two-sided-short-edge)$' } | Select-Object -Last 1
+    if ($pick) { $p = $pick.Split('|'); $quality = $p[0]; $sides = $p[1] }
   } catch { Log "picker error: $($_.Exception.Message)" }
 }
-Log "quality = $quality"
+Log "quality = $quality, sides = $sides"
 
 # Build the argument list, substituting {DISTRO}, {QUALITY}, {FILE} (Windows path),
 # and {WSLFILE} (Linux path).
@@ -45,6 +45,7 @@ foreach ($a in $cfg.forwardArgs) {
   $x = [string]$a
   $x = $x.Replace('{DISTRO}', [string]$cfg.wslDistro)
   $x = $x.Replace('{QUALITY}', $quality)
+  $x = $x.Replace('{SIDES}', $sides)
   $x = $x.Replace('{FILE}', $claim)
   if ($x.Contains('{WSLFILE}')) {
     # Convert C:\dir\file -> /mnt/c/dir/file in-process (calling `wsl wslpath` here
