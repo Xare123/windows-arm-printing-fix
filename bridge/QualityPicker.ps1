@@ -3,6 +3,8 @@
 # defaults (Best + Double-sided) after a few seconds. Writes ONE line to stdout:
 #   "<quality>|<sides>"   e.g.  "High|two-sided-long-edge"   or  "Draft|one-sided"
 # Must run STA so WinForms is reliable:  powershell.exe -STA -File QualityPicker.ps1
+# Optional: -RenderTo <png> renders the dialog to an image (for layout testing) and exits.
+param([string]$RenderTo)
 $ErrorActionPreference = 'SilentlyContinue'
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
@@ -21,8 +23,8 @@ $font = New-Object System.Drawing.Font('Segoe UI', 10)
 function New-RB([string]$text, [int]$x, [int]$y, [bool]$checked) {
   $r = New-Object System.Windows.Forms.RadioButton
   $r.Text = $text
+  $r.AutoSize = $true          # size to content so the buttons never overlap/clip
   $r.Location = New-Object System.Drawing.Point($x, $y)
-  $r.Size = New-Object System.Drawing.Size(150, 24)
   $r.Font = $font
   $r.Checked = $checked
   return $r
@@ -32,17 +34,17 @@ $gq = New-Object System.Windows.Forms.GroupBox
 $gq.Text = 'Quality'; $gq.Font = $font
 $gq.Location = New-Object System.Drawing.Point(16, 10)
 $gq.Size = New-Object System.Drawing.Size(352, 56)
-$qDraft  = New-RB 'Draft'  14 22 $false
-$qNormal = New-RB 'Normal' 110 22 $false
-$qBest   = New-RB 'Best'   232 22 $true
+$qDraft  = New-RB 'Draft'  18 22 $false
+$qNormal = New-RB 'Normal' 130 22 $false
+$qBest   = New-RB 'Best'   250 22 $true
 $gq.Controls.AddRange(@($qDraft, $qNormal, $qBest))
 
 $gs = New-Object System.Windows.Forms.GroupBox
 $gs.Text = 'Sides'; $gs.Font = $font
 $gs.Location = New-Object System.Drawing.Point(16, 74)
 $gs.Size = New-Object System.Drawing.Size(352, 56)
-$sDouble = New-RB 'Double-sided' 14 22 $true
-$sSingle = New-RB 'Single-sided' 190 22 $false
+$sDouble = New-RB 'Double-sided' 18 22 $true
+$sSingle = New-RB 'Single-sided' 200 22 $false
 $gs.Controls.AddRange(@($sDouble, $sSingle))
 
 $ok = New-Object System.Windows.Forms.Button
@@ -62,6 +64,15 @@ $cd.Text = "Auto-print in $script:secs s (defaults shown)..."
 
 $f.Controls.AddRange(@($gq, $gs, $ok, $cd))
 
+if ($RenderTo) {
+  $f.StartPosition = 'Manual'; $f.Location = New-Object System.Drawing.Point(-3000, -3000)
+  $f.Show(); $f.Refresh(); Start-Sleep -Milliseconds 250
+  $bmp = New-Object System.Drawing.Bitmap($f.Width, $f.Height)
+  $f.DrawToBitmap($bmp, (New-Object System.Drawing.Rectangle(0, 0, $f.Width, $f.Height)))
+  $bmp.Save($RenderTo, [System.Drawing.Imaging.ImageFormat]::Png)
+  $f.Close(); return
+}
+
 $timer = New-Object System.Windows.Forms.Timer
 $timer.Interval = 1000
 $timer.Add_Tick({
@@ -69,7 +80,6 @@ $timer.Add_Tick({
   if ($script:secs -le 0) { $timer.Stop(); $f.Close() } else { $cd.Text = "Auto-print in $script:secs s (defaults shown)..." }
 })
 $timer.Start()
-
 [void]$f.ShowDialog()
 $timer.Stop()
 
