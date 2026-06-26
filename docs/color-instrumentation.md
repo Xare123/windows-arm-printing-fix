@@ -57,5 +57,6 @@ Rendering `COLORTARGET.pdf` through the CUPS renderer (poppler; no `colord` ⇒ 
 If native matches CUPS, **native printing replaces the bridge** (all options already in the dialog, no WSL). If it gets close but not equal, keep the bridge for color‑critical work.
 
 ## Status
+- ✅ **2026-06-26 RESOLVED (printer on the LAN): native is NOT fixable; the bridge is the answer.** Associating an sRGB ICC profile with the printer (per-user, via the Windows Color System API) AND forcing Best quality both still printed flat: the driverless IPP path ignores the OS profile (vendor color needs a Print Support App, which the J4335DW lacks). Meanwhile the bridge's own capture stage was proven color-faithful (its `Microsoft Print To PDF` capture, rendered by poppler, matched the original sRGB exactly), so routing through CUPS is precisely what delivers the vivid color. Use the bridge for color-critical work.
 - ✅ **CUPS reference captured** (table above) — byte‑perfect sRGB.
 - ⏳ **Native capture + tuning** — needs the printer (do it when home).

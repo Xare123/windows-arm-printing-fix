@@ -44,6 +44,16 @@ sleep 1
 
 echo "== create driverless (AirPrint) queue '$QUEUE' -> $URI =="
 lpadmin -p "$QUEUE" -E -v "$URI" -m everywhere 2>&1
+# Many AirPrint / IPP-Everywhere printers print the page but never send CUPS the
+# IPP "job-completed" signal, so jobs stick as "Waiting for job to complete" and
+# wedge the queue (later jobs then silently stop coming out). waitjob=false tells
+# the CUPS ipp backend to finish the job right after sending the data. Re-point -v
+# (this keeps the 'everywhere' PPD generated just above).
+case "$URI" in
+  *\?*) DEVURI="$URI&waitjob=false" ;;
+  *)    DEVURI="$URI?waitjob=false" ;;
+esac
+lpadmin -p "$QUEUE" -v "$DEVURI" 2>&1
 cupsenable "$QUEUE" 2>/dev/null || true
 cupsaccept "$QUEUE" 2>/dev/null || true
 sleep 1

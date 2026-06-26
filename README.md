@@ -48,6 +48,33 @@ See **[`bridge/README.md`](bridge/README.md)**. Two non‑obvious things the set
 
 ---
 
+## Troubleshooting: the exact symptoms this fixes
+
+Searched your way here? One of these probably matches.
+
+### Colors look flat, washed out, or dull versus a Mac or phone (improving color printing on Windows on ARM)
+Windows renders the page and its color management desaturates it before the job is sent. We tested the usual native "fixes" and confirmed they do **not** work: associating an **sRGB ICC profile** with the printer (Color Management, "use my settings for this device") and forcing **Best** quality both still print flat, because the driverless **IPP Everywhere** path ignores the OS color profile. Under Windows' modern print stack, vendor color rides through a **Print Support App (PSA)**, which most printers (including the Brother MFC-J4335DW) do not provide. What actually restores vivid color is the **bridge** in this repo: it renders with **CUPS + poppler** and sends the printer your exact sRGB, the same path macOS / AirPrint uses. Byte-level proof is in [docs/color-instrumentation.md](docs/color-instrumentation.md).
+
+### The printer prints one page, then the queue jams ("Waiting for job to complete")
+Many AirPrint / IPP printers print the page but never send CUPS the IPP "job-completed" signal, so jobs pile up stuck and newer jobs silently stop coming out (it can look like the bridge "did nothing", or reverted to flat native output). Fix: add `?waitjob=false` to the CUPS queue's device URI so the backend finishes each job right after sending the data:
+
+```
+lpadmin -p <queue> -v "ipp://<printer-ip>/ipp/print?waitjob=false"
+```
+
+The bridge's backend setup applies this automatically.
+
+### No ARM64 driver, or quality stuck at 600 dpi / "Normal"
+There is no 1200-dpi *input* on any OS (see above). The real lever is **Print Quality = Best**; set the native printer's default to Best so it is not silently stuck on Normal. For the richer CUPS-rendered color on top of that, use the **bridge**.
+
+### A WSD printer keeps making stuck or errored jobs
+WSD is the flakier transport. Re-add the printer as an **IPP** printer (`http://<printer-ip>:631/ipp/print`, Microsoft IPP Class Driver) for reliable status and clean job completion.
+
+### Does it work with my printer?
+Any **AirPrint / IPP Everywhere** printer works, which is virtually every modern network printer: **all recent Brother models**, plus Canon, Epson, HP, and others. Nothing here is model-specific.
+
+---
+
 ## `clawmon-arm64/` — the port monitor (building block + a novel artifact)
 
 [clawmon](https://github.com/clawsoftware/clawmon) (by clawSoft, derived from Monti Lorenzo's **MFILEMON**) is a GPL‑2, RedMon‑style "redirect a printer port to a program" port monitor. **No ARM64 build existed anywhere — this is one** (cross‑compiled with **llvm‑mingw**, no Visual Studio needed; see [`BUILD.md`](BUILD.md)).

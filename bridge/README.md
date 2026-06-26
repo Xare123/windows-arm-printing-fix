@@ -18,7 +18,7 @@ No service, no watcher, no tray icon. The only always‑on components are the Wi
 ## Install — clickable
 
 Run **`FullQualityPrintBridge-Setup.exe`** (from the GitHub Release) and follow the wizard. It:
-1. **asks which printer to use** — enter its **IP address** (any AirPrint/IPP printer works; leave blank to try auto‑detect),
+1. **asks which printer to use** — pick it from a **dropdown of installed printers**, or enter its **IP address** (any AirPrint/IPP printer works; leave blank to try auto‑detect),
 2. creates a WSL Ubuntu distro with CUPS (first run downloads ~250 MB),
 3. enables **WSL2 mirrored networking** (so large pages don't stall),
 4. adds the **"Full Quality (1200)"** printer + the print‑event task, pointed at your printer.
@@ -69,6 +69,7 @@ The popup's **Draft / Normal / Best** maps to CUPS `cupsPrintQuality` **Draft / 
 See `config.example.json` for `curl`/`lpr` examples (e.g. forwarding straight to a CUPS/Mac/Pi over the network).
 
 ## Verify / troubleshoot
+- **Prints one page then the queue jams ("Waiting for job to complete")?** Many AirPrint printers (this Brother included) print the page but never tell CUPS the job finished, so the queue wedges and later jobs stop coming out. The backend sets `?waitjob=false` on the queue URI so jobs complete after the data is sent; to apply it by hand: `wsl -d Ubuntu-2404 -u root -- lpadmin -p FullQuality -v "ipp://YOUR.PRINTER.IP/ipp/print?waitjob=false"`.
 - Backend directly: `wsl -d Ubuntu-2404 -u root -- /usr/local/bin/armprint High /etc/hostname`
 - Watch the log: `Get-Content C:\ProgramData\ArmPrintBridge\bridge.log -Wait`
 - **Test page:** print **`TESTPAGE.pdf`** — a frame + 4 corner marks (truncation check), a 6–24 pt text ladder (sharpness), and color swatches + gradient + grayscale ramp (color/transfer). Regenerate with `backend/maketestpage.sh`.
