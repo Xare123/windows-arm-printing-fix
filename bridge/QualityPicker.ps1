@@ -1,5 +1,5 @@
 # QualityPicker.ps1 - per-job print options for the AirPrint bridge.
-# Shows Quality (Draft/Normal/Best) + Sides (Double/Single); auto-confirms the
+# Shows Quality (Draft/Normal/Best) + Sides (Single / Double long-or-short-edge); auto-confirms the
 # defaults (Best + Double-sided) after a few seconds. Writes ONE line to stdout:
 #   "<quality>|<sides>"   e.g.  "High|two-sided-long-edge"   or  "Draft|one-sided"
 # Must run STA so WinForms is reliable:  powershell.exe -STA -File QualityPicker.ps1
@@ -43,9 +43,14 @@ $gs = New-Object System.Windows.Forms.GroupBox
 $gs.Text = 'Sides'; $gs.Font = $font
 $gs.Location = New-Object System.Drawing.Point(16, 74)
 $gs.Size = New-Object System.Drawing.Size(352, 56)
-$sDouble = New-RB 'Double-sided' 18 22 $true
-$sSingle = New-RB 'Single-sided' 200 22 $false
-$gs.Controls.AddRange(@($sDouble, $sSingle))
+$sCombo = New-Object System.Windows.Forms.ComboBox
+$sCombo.DropDownStyle = 'DropDownList'
+$sCombo.Font = $font
+$sCombo.Location = New-Object System.Drawing.Point(18, 20)
+$sCombo.Size = New-Object System.Drawing.Size(322, 26)
+[void]$sCombo.Items.AddRange(@('Single-sided', 'Double-sided, flip on long edge', 'Double-sided, flip on short edge'))
+$sCombo.SelectedIndex = 1   # default: double-sided, flip on long edge (portrait)
+$gs.Controls.Add($sCombo)
 
 $ok = New-Object System.Windows.Forms.Button
 $ok.Text = 'Print'
@@ -84,5 +89,5 @@ $timer.Start()
 $timer.Stop()
 
 $q = if ($qDraft.Checked) { 'Draft' } elseif ($qNormal.Checked) { 'Normal' } else { 'High' }
-$s = if ($sSingle.Checked) { 'one-sided' } else { 'two-sided-long-edge' }
+$s = switch ($sCombo.SelectedIndex) { 0 { 'one-sided' } 2 { 'two-sided-short-edge' } default { 'two-sided-long-edge' } }
 Write-Output "$q|$s"

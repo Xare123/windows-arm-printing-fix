@@ -22,7 +22,7 @@ URI=""
 case "$ARG" in
   ipp://*|ipps://*) URI="$ARG" ;;
   "") echo "  no printer given - trying to auto-discover via ippfind (mDNS; may not work in WSL)..."
-      ALL="$(ippfind --timeout 6 2>/dev/null | grep -E '^ipps?://')"
+      ALL="$(ippfind -T 6 2>/dev/null | grep -E '^ipps?://')"
       if [ -n "$ALL" ]; then echo "  found:"; echo "$ALL" | sed 's/^/    /'; fi
       URI="$(printf '%s\n' "$ALL" | head -1)"
       if [ "$(printf '%s\n' "$ALL" | grep -c .)" -gt 1 ]; then
@@ -47,13 +47,18 @@ lpadmin -p "$QUEUE" -E -v "$URI" -m everywhere 2>&1
 # Many AirPrint / IPP-Everywhere printers print the page but never send CUPS the
 # IPP "job-completed" signal, so jobs stick as "Waiting for job to complete" and
 # wedge the queue (later jobs then silently stop coming out). waitjob=false tells
-# the CUPS ipp backend to finish the job right after sending the data. Re-point -v
-# (this keeps the 'everywhere' PPD generated just above).
+# the CUPS ipp backend to finish the job right after sending the data, and
+# waitprinter=false skips the SNMP "printer ready" wait, whose ~2-minute timeout
+# made the backend RETRY jobs (= half/duplicate pages) on printers with flaky
+# status reporting. Re-point -v (this keeps the 'everywhere' PPD generated above).
 case "$URI" in
-  *\?*) DEVURI="$URI&waitjob=false" ;;
-  *)    DEVURI="$URI?waitjob=false" ;;
+  *\?*) DEVURI="$URI&waitjob=false&waitprinter=false" ;;
+  *)    DEVURI="$URI?waitjob=false&waitprinter=false" ;;
 esac
 lpadmin -p "$QUEUE" -v "$DEVURI" 2>&1
+# If a job still fails (printer off/jammed), drop it instead of retrying forever:
+# endless retries can fill the PRINTER'S OWN spool until it rejects everything.
+lpadmin -p "$QUEUE" -o printer-error-policy=abort-job 2>&1
 cupsenable "$QUEUE" 2>/dev/null || true
 cupsaccept "$QUEUE" 2>/dev/null || true
 sleep 1
@@ -74,5 +79,18 @@ EOS
 chmod +x /usr/local/bin/armprint
 
 echo "== verify =="
+# lpadmin exits 0 even when the printer is unreachable, so check the results:
+# the queue must exist AND the IPP-Everywhere PPD must have been generated
+# (that requires talking to the live printer).
+if ! lpstat -v "$QUEUE" >/dev/null 2>&1; then
+  echo "!! queue $QUEUE was not created - is the printer ON and reachable at $URI ?" >&2
+  exit 1
+fi
+if [ ! -f "/etc/cups/ppd/$QUEUE.ppd" ]; then
+  echo "!! queue exists but no IPP-Everywhere PPD was generated - the printer must" >&2
+  echo "!! be ON and reachable during setup. Fix connectivity and re-run." >&2
+  lpadmin -x "$QUEUE" 2>/dev/null
+  exit 1
+fi
 lpstat -v "$QUEUE" 2>&1 || true
 echo "AIRPRINT-BACKEND-DONE"

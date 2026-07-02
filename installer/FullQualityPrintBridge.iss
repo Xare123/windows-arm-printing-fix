@@ -3,7 +3,7 @@
 ; The Setup.exe is 32-bit and runs on Windows on ARM via emulation; it installs in ARM64 mode.
 
 #define AppName "Full Quality Print Bridge"
-#define AppVer  "1.1.0"
+#define AppVer  "1.2.0"
 #define Pub     "clawmon-arm64 (community)"
 
 [Setup]
@@ -29,7 +29,7 @@ SetupLogging=yes
 Source: "C:\Claude\clawmon-arm64\bridge\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs ignoreversion
 
 [Messages]
-WelcomeLabel2=This will add a normal "Full Quality (1200)" printer to Windows and set up a one‑time renderer (Linux/WSL running your printer's real driver) so your Brother prints at full resolution.%n%nNothing runs in the background — printing fires a one‑shot helper that then exits.
+WelcomeLabel2=This will add a "Full Color Printer" to Windows — a completely normal printer (native dialog: quality, double‑sided, grayscale) whose pages are rendered by the same pipeline a Mac uses, for vivid full‑quality color on Windows‑on‑ARM. Works with any AirPrint/IPP printer (all modern Brother models and most others).%n%nIt also installs the classic "Full Quality (1200)" popup printer as a fallback.
 
 [Run]
 ; one elevated post-install step does everything: WSL backend + the Windows printer/event-task
@@ -39,7 +39,7 @@ Filename: "powershell.exe"; \
   Flags: waituntilterminated
 
 [UninstallRun]
-Filename: "powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\uninstall-bridge.ps1"""; Flags: runhidden; RunOnceId: "RemoveBridge"
+Filename: "powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\uninstall-bridge.ps1"" -Unattended"; Flags: runhidden; RunOnceId: "RemoveBridge"
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}"
@@ -74,7 +74,7 @@ begin
   ps :=
     '$ErrorActionPreference="SilentlyContinue"' + #13#10 +
     '$r = foreach ($p in Get-Printer) {' + #13#10 +
-    '  if ($p.Name -match "Print to PDF|Microsoft XPS|OneNote|Fax|Full Quality") { continue }' + #13#10 +
+    '  if ($p.Name -match "Print to PDF|Microsoft XPS|OneNote|Fax|Full Quality|Full Color") { continue }' + #13#10 +
     '  $addr = ""' + #13#10 +
     '  if ($p.PortName -match "^https?://([^:/]+)") { $addr = $matches[1] }' + #13#10 +
     '  elseif ($p.PortName -match "(\d{1,3}(\.\d{1,3}){3})") { $addr = $matches[1] }' + #13#10 +
